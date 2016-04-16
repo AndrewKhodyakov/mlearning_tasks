@@ -16,7 +16,13 @@ import matplotlib.pyplot as plt
 #===============================================================================
 def load_data(csv_data):
     """
-    Загрузка и подготовка данных
+    Загрузка и подготовка данных:
+    - загружаем данные из файла;
+    - отбираем нужные поля;
+    - удаялем пропуски;
+    - убираем строковые типы, меняем их на признаки ноль один.
+
+    csv_data: путь к данным 
     """
 
     data = pd.read_csv(csv_data)
@@ -28,6 +34,8 @@ def load_data(csv_data):
 def plot_data(path_to_plots):
     """
     Построение графиков в файл
+
+    path_to_plots: путь в папку к графикам
     """
 
     figure, ((age, sex), (pclass, fare)) =\
@@ -52,7 +60,30 @@ def plot_data(path_to_plots):
 
     figure.savefig(path_to_plots)
 
-def fit_data(workdata):pass
+def fit_data(indications, target_var, grafplot=False):
+    """
+    Построение дерева и обучение его:
+    - отбираем уелевую переменную - по ней производиться бинарный отбор
+    - отбираем признаки относительно которых производится классификация
+    - строим дерево и обучаем его
+
+    workdata: набор отобранных данных
+    indications: поляотносительно которых проихводитья классификация
+    target_var: целевая переменная по которой производитья классификация
+
+    return: возвращает признаки по степени их важности для классификации
+    """
+    indications = indications
+    target_var = target_var
+
+    clf = tree.DecisionTreeClassifier(random_state=241)
+    clf = clf.fit(indications, target_var)
+    
+    if grafplot is True:
+        with open(os.getcwd() + "/iris.dot", 'w') as f_dot:
+            f_dot = tree.export_graphviz(clf, out_file=f_dot)
+
+    return clf.feature_importances_
 
 #===============================================================================
 
@@ -65,18 +96,13 @@ if __name__ == "__main__" :
 
     plot_data(path_to_plots)
 
-    #print(workdata)
-
-    X = [workdata.ix[i, ['Pclass', 'Fare', 'Age', 'Sex']].get_values()\
-         for i in workdata.index]
-
-    clf = tree.DecisionTreeClassifier(random_state=241)
-    clf = clf.fit(X, workdata.Survived)
-
-    with open(os.getcwd() + "/iris.dot", 'w') as f_dot:
-         f_dot = tree.export_graphviz(clf, out_file=f_dot)
-    
-    importances = clf.feature_importances_   
+        
+    importances = fit_data(
+        [workdata.ix[i, ['Pclass', 'Fare', 'Age', 'Sex']].get_values()\
+            for i in workdata.index],
+        workdata.Survived.values,
+        grafplot=True,
+    )
 
     print(workdata.ix[0, ['Age', 'Sex', 'Pclass', 'Fare']])
     print(importances) 
