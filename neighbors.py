@@ -19,7 +19,22 @@ def load_data(csv_data):
     """
     data = pd.read_csv(csv_data)
     return data
+
+def print(data):
+    """
+    Построение сырых данных всех
+    """
+    n_bins = 12
+
+    for i in data:
+        if i != 'Class_id':
+            figure, axes = plt.plot()
+            axes.hist(data[i], histtype='bar')
+            axes.set_title(i)
+
 #===============================================================================
 
-if __name__ == "__main__": pass
+if __name__ == "__main__":
+    data = load_data(os.getcwd() + '/wine.csv')
+    print(data)
 
