@@ -31,12 +31,14 @@ def load_data(csv_data):
     workdata = workdata.replace(['male', 'female'], [0,1]) #избавлямся от строк
     return workdata
 
-def plot_data(path_to_plots):
+def plot_data(path_to_plots, data_set):
     """
     Построение графиков в файл
 
     path_to_plots: путь в папку к графикам
+    data_set:  данные для постороеня (DataFrame)
     """
+    workdata = data_set
 
     figure, ((age, sex), (pclass, fare)) =\
          plt.subplots(2, 2,sharex='col', sharey='row')
@@ -94,7 +96,7 @@ if __name__ == "__main__" :
 
     workdata = load_data(csv_data)
 
-    plot_data(path_to_plots)
+    plot_data(path_to_plots, workdata)
 
         
     importances = fit_data(

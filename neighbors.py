@@ -20,21 +20,25 @@ def load_data(csv_data):
     data = pd.read_csv(csv_data)
     return data
 
-def print(data):
+def plot_data(path_to_plots, data):
     """
     Построение сырых данных всех
     """
-    n_bins = 12
-
     for i in data:
         if i != 'Class_id':
-            figure, axes = plt.plot()
-            axes.hist(data[i], histtype='bar')
-            axes.set_title(i)
+            plt.hist(data[i], bins=12, histtype='bar')
+            plt.title(i)
+            plt.grid(True)
+            if '/' in i:
+                png_name = '{0}.png'.format(i.replace('/','_'))
+            else:
+                png_name = '{0}.png'.format(i)
+                
+            plt.savefig((path_to_plots + png_name))
 
 #===============================================================================
 
 if __name__ == "__main__":
     data = load_data(os.getcwd() + '/wine.csv')
-    print(data)
+    plot_data((os.getcwd() + '/img/'), data)
 
