@@ -97,11 +97,13 @@ def do_varibale_neighbors_number(data_set, min_range, max_range):
     """
     Меняем число соседей 
     """
+    knn = np.linspace(min_range, max_range)
     out = np.array([])
     for i in range(min_range, max_range):
         out = np.append(out, fit_data(data_set, i))
 
-    print(out.max())
+    print('Номер максимального элемента:{0}, значение:\
+{1}'.format(knn[out.argmax()], out.max()))
     return out
 
 
