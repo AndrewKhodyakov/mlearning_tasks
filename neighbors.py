@@ -30,9 +30,9 @@ def data_preparation(all_data, features_colomns, label):
     all_data: данны еи признаки в одном DataFrame
     features_colomns: столбцы с признаками
     label: столбец с названиями классов
-
+    -----------
     return:
-    namedtupel - с признакакми и классами
+        namedtupel - с признакакми и классами
     """
     out = namedtuple('PreporatedData', ['features', 'labels'])
     out.features = all_data.ix[:, features_colomns].get_values()
@@ -56,6 +56,7 @@ def plot_data(path_to_plots, data):
                 png_name = '{0}.png'.format(i)
                 
             plt.savefig((path_to_plots + png_name))
+            plt.close()
 
 
 def fit_data(data_set, neighbors_number):
@@ -65,6 +66,9 @@ def fit_data(data_set, neighbors_number):
     data_set: Набор данных для обучения и классов:
     data_set.features - признаки
     data_set.labels - классы
+    -----------
+    return:
+        np.mean(accuracy) - среднее значение точности обучения
     """
     #здесь просто рендомйзером перемешиваются индексы и весь диапазон делится
     #на 5 блоков
@@ -82,11 +86,16 @@ def fit_data(data_set, neighbors_number):
 
     return np.mean(accuracy)
     
-def do_varibale(min_range, max_ramge):
+def do_varibale_neighbors_number(data_set, min_range, max_range):
     """
     Меняем число соседей 
     """
-    pass
+    out = np.array([])
+    for i in range(min_range, max_range):
+        out = np.append(out, fit_data(data_set, i))
+
+    print(out.max())
+    return out
 
 def normalization():
     """
@@ -94,13 +103,25 @@ def normalization():
     """
     pass
 
+def accuracy_plot(path_to_plots, accuracy, neighbors_range):
+    """
+    Построение точности
+    """
+    plt.plot(neighbors_range, accuracy)
+    plt.title('Accurency/kNN, not normed')
+    plt.grid(True)
+    plt.savefig((path_to_plots + '/accurency.png'))
+
 #===============================================================================
 
 if __name__ == "__main__":
     wine_data = load_data(os.getcwd() + '/wine.csv')
     plot_data((os.getcwd() + '/img/'), wine_data)
 
-    fit_data(
+    k_min = 1
+    k_max = 50
+
+    accurnsis = do_varibale_neighbors_number(
         data_preparation(wine_data, [
             'Alcohol', 
             'Malic_acid', 
@@ -116,9 +137,14 @@ if __name__ == "__main__":
             'OD280/OD315_of_diluted wines', 
             'Proline'
             ],
-            'Class_id'
+        'Class_id'
         ),
-        5
+        k_min,
+        k_max
     )
 
+    accuracy_plot(
+        (os.getcwd() + '/img/'),
+        accurnsis,
+        np.linspace(k_min, k_max, len(accurnsis)))
 
