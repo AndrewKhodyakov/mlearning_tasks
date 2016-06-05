@@ -90,20 +90,6 @@ def plot_data(path_to_plot):
     plt.savefig(path_to_plot)
     plt.close()
     
-def data_preparation(all_data, features_colomns, label, noramlization=False):
-    """
-    Подготовка данных для обрабоки, приведение данных к одному масштабу
-    """
-    out = namedtuple('PreporatedData', ['features', 'labels'])
-    out.labels = all_data[label].values
-
-    if noramlization:
-        out.features = preprocessing.scale(all_data.ix[:, features_colomns].get_values())
-    else:
-        out.features = all_data.ix[:, features_colomns].get_values()
-
-    return out
-
 
 def do_varibale_p():
     """
@@ -120,6 +106,17 @@ if __name__ == "__main__":
     #грузим данные из библиотеки
     boston = datasets.load_boston()
     plot_data('./img/boston.png')
-    
-    
 
+    #производим нормализацию
+    normalaized = preprocessing.scale(boston.data)
+
+    #варьируем параметр метрики Миньковского
+    for p_value in np.linspace(1,10,200):
+        #создаем модель для обучения
+        neighbors = KNeighborsRegressor(
+            n_neighbors=5,
+            weights='distance',
+            p=p_value
+        )
+
+        
