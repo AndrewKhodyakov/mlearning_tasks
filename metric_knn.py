@@ -110,6 +110,9 @@ if __name__ == "__main__":
     #производим нормализацию
     normalaized = preprocessing.scale(boston.data)
 
+    #создаем матрицы с кросс валидацией
+    kfold = KFold(len(normalaized.features), n_folds=5, shuffle=True, random_state=42)
+
     #варьируем параметр метрики Миньковского
     for p_value in np.linspace(1,10,200):
         #создаем модель для обучения
