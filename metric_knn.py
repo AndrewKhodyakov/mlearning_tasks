@@ -103,6 +103,7 @@ def do_varibale_p():
 
 if __name__ == "__main__": 
 
+#    CVR = pd.DataFrame(columns=np.linspace(1,10,200))
     #грузим данные из библиотеки
     boston = datasets.load_boston()
     plot_data('./img/boston.png')
@@ -112,6 +113,7 @@ if __name__ == "__main__":
 
     #создаем матрицы с кросс валидацией
     kfold = KFold(len(normalaized.features), n_folds=5, shuffle=True, random_state=42)
+    x_train, x_test = kfold.
 
     #варьируем параметр метрики Миньковского
     for p_value in np.linspace(1,10,200):
@@ -121,5 +123,4 @@ if __name__ == "__main__":
             weights='distance',
             p=p_value
         )
-
         
