@@ -39,10 +39,13 @@ from sklearn import datasets
 from sklearn import preprocessing
 
 from sklearn.cross_validation import KFold
+from sklearn.cross_validation import cross_val_score
+
 from sklearn.neighbors import KNeighborsRegressor
 
 import pandas as pd
 import numpy as np
+import shelve
 
 import matplotlib
 matplotlib.use('Agg')
@@ -91,19 +94,31 @@ def plot_data(path_to_plot):
     plt.close()
     
 
-def do_varibale_p():
-    """
-    Изменение параметра метрики миньковского
-    """
-    p_value = np.linspace(1,10,200)
-    kfold = KFold(len(data_set.features), n_folds=5, shuffle=True, random_state=42)
+#def do_varibale_p():
+#    """
+#    Изменение параметра метрики миньковского
+#    """
+#    p_value = np.linspace(1,10,200)
+#    kfold = KFold(len(data_set.features), n_folds=5, shuffle=True, random_state=42)
     
+
+def kfold_split(kfold, X_data, y_data):
+    """
+    Генератор разбиватель на части
+    """
+    X_data = X_data
+    y_data = y_data
+    for train, test in kfold:
+        x_train_out, x_test_out = X_data[train], X_data[test]
+        y_train_out, y_test_out = y_data[train], y_data[test]
+        yield x_train_out, x_test_out, y_train_out, y_test_out
+
 
 #===============================================================================
 
 if __name__ == "__main__": 
 
-#    CVR = pd.DataFrame(columns=np.linspace(1,10,200))
+    CVR = pd.DataFrame(columns=np.linspace(1,10,200))
     #грузим данные из библиотеки
     boston = datasets.load_boston()
     plot_data('./img/boston.png')
@@ -112,15 +127,26 @@ if __name__ == "__main__":
     normalaized = preprocessing.scale(boston.data)
 
     #создаем матрицы с кросс валидацией
-    kfold = KFold(len(normalaized.features), n_folds=5, shuffle=True, random_state=42)
-    x_train, x_test = kfold.
+    kfold = KFold(normalaized.shape[0], n_folds=5, shuffle=True, random_state=42)
+#    kfold_gen = kfold_split(kfold, normalaized, boston.target)
 
     #варьируем параметр метрики Миньковского
     for p_value in np.linspace(1,10,200):
         #создаем модель для обучения
+        print('p_value = ', p_value)
         neighbors = KNeighborsRegressor(
             n_neighbors=5,
             weights='distance',
             p=p_value
         )
-        
+        neighbors.fit(normalaized, boston.target)
+        CVR[p_value] = cross_val_score(
+            neighbors, normalaized, y=boston.target, cv=kfold, scoring='mean_squared_error'
+        )            
+
+    db = shelve.open('./result.db')
+    db['res'] = CVR
+    db.close()
+
+    mCVR = CVR.apply(np.mean)
+    print(mCVR[mCVR == mCVR.max()])
