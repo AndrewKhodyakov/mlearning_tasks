@@ -14,6 +14,6 @@ if __name__ == "__main__":
     tmp = svm_model.support_
     tmp.sort()
     for i in tmp:
-        res = res + str(i) + ','
+        res = res + str(i-1) + ','
     f.write(res)
     f.close()
