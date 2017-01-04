@@ -101,7 +101,7 @@ class SecondWeekLinearMethods(luigi.Task):
         perceptron = Perceptron(random_state=241)
         perceptron.fit(X_train, y_train)
 
-        perceptron.predict(X_test)
+        predictions = perceptron.predict(X_test)
 
         with self.output().open('w') as output:
             output.write(perceptron.scale)
@@ -110,10 +110,12 @@ class SecondWeekLinearMethods(luigi.Task):
         """
         Что требует
         """
-        return GetData({'target':self.param.get('train'), 'result':self.X_path,\
+        return GetData({'target':self.param.get('train'), 'result':self.X_train_path,\
                 'coluse':self.X_col}),\
-            GetData({'target':self.param.get('train'), 'result':self.y_path,\
-                'coluse':self.y_col})
+            GetData({'target':self.param.get('train'), 'result':self.y_train_path,\
+                'coluse':self.y_col}),\
+            GetData({'target':self.param.get('test'), 'result':self.X_test_path,\
+                'coluse':self.X_col})
 
 class GetData(luigi.WrapperTask):
     """
@@ -132,8 +134,11 @@ class GetData(luigi.WrapperTask):
         """
         Берем данные
         """
-        dframe = pd.read_csv(self.param.get('target'),\
-            usecols=self.param.get('usecols'))
+        if self.param.get('usecols'):
+            dframe = pd.read_csv(self.param.get('target'),\
+                usecols=self.param.get('usecols'))
+        else:
+            dframe = pd.read_csv(self.param.get('target'))
 
         dframe.to_csv(self.param.get('result'))
 
