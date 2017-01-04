@@ -26,9 +26,8 @@ class TasksSet(luigi.WrapperTask):
     Вся последовательность задач
     """
     def requires(self):
-        yield TrainSimpleClassifierModels(
-            meta=setup.meta_file_path,
-            param={'algo_type':'kNN', 'algo_main_param':5})
+        yield SecondWeekLinearMethods(
+            param={'train':, 'test':})
 
 class TrainSimpleClassifierModels(luigi.Task):
     """
