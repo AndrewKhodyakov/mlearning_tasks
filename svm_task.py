@@ -1,6 +1,9 @@
 import pandas as pd
+import matplotlib
+import seaborn
 from sklearn import svm
 
+matplotlib.use('Agg')
 
 if __name__ == "__main__":
     data = pd.read_csv(\
@@ -14,6 +17,9 @@ if __name__ == "__main__":
     tmp = svm_model.support_
     tmp.sort()
     for i in tmp:
-        res = res + str(i-1) + ','
+        res = res + str(i+1) + ','
     f.write(res)
     f.close()
+
+    plt = seaborn.regplot(data['A'], data['B'])
+    plt.figure.savefig('./svm.png')
