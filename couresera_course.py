@@ -13,6 +13,7 @@ import pandas as pd
 
 from sklearn.linear_model import Perceptron
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score
 
 
 path_to_data = lambda filename: os.environ.get('DATA_DIR', '.') + '/' + filename
@@ -84,6 +85,15 @@ class SecondWeekLinearMethods(luigi.Task):
                 '_{0}_'.format(self.param.get('scale')) + '.csv'
         return path_to_data(out)
 
+    @property
+    def y_test_path(self):
+        """
+        СТроит путь к  данным для теста
+        """
+        out = 'SecondWeekLinearMethods_y_test' +\
+                '_{0}_'.format(self.param.get('scale')) + '.csv'
+        return path_to_data(out)
+
     def run(self):
         """
         Пуск задачи
@@ -91,7 +101,8 @@ class SecondWeekLinearMethods(luigi.Task):
         X_train = pd.read_csv(self.X_train_path, usecols=self.X_col)
         y_train = pd.read_csv(self.y_train_path, usecols=self.y_col)
 
-        X_test = pd.read_csv(self.X_test_path)
+        X_test = pd.read_csv(self.X_test_path, usecols=self.X_col)
+        y_test = pd.read_csv(self.y_test_path, usecols=self.y_col)
 
         if self.param.get('scale'):
             scaler = StandardScaler()
@@ -103,8 +114,10 @@ class SecondWeekLinearMethods(luigi.Task):
 
         predictions = perceptron.predict(X_test)
 
+        accuracy = accuracy_score(y_test, predictions)
+
         with self.output().open('w') as output:
-            output.write(perceptron.scale)
+            output.write(accuracy)
 
     def requires(self):
         """
@@ -115,9 +128,11 @@ class SecondWeekLinearMethods(luigi.Task):
             GetData({'target':self.param.get('train'), 'result':self.y_train_path,\
                 'coluse':self.y_col}),\
             GetData({'target':self.param.get('test'), 'result':self.X_test_path,\
-                'coluse':self.X_col})
+                'coluse':self.X_col}),\
+            GetData({'target':self.param.get('test'), 'result':self.X_test_path,\
+                'coluse':self.y_col})
 
-class GetData(luigi.WrapperTask):
+class GetData(luigi.Task):
     """
     Получение данных
     """
