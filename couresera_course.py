@@ -35,20 +35,18 @@ class TasksSet(luigi.WrapperTask):
         yield SecondWeekLinearMethods(\
             param={'train':path_to_data('SecondWeekLinearMethods_train.csv'),\
                 'test':path_to_data('SecondWeekLinearMethods_test.csv'),\
-                'scale':False})
+                'scale':True})
 
 
 class SecondWeekLinearMethods(luigi.Task):
     """
     Задача решающая задание по линейным методам классификации
     """
-    param = luigi.parameter.DictParameter(default={
-        'train':path_to_data('./train.csv'),
-        'test':path_to_data('./test.csv'),
-        'scale':False
-    })
+    param = luigi.parameter.DictParameter()
+
     X_col = [1, 2]
     y_col = [0]
+
 
     def output(self):
         """
@@ -98,16 +96,26 @@ class SecondWeekLinearMethods(luigi.Task):
         """
         Пуск задачи
         """
-        X_train = pd.read_csv(self.X_train_path, usecols=self.X_col)
-        y_train = pd.read_csv(self.y_train_path, usecols=self.y_col)
+        X_train = pd.read_csv(self.X_train_path, index_col=[0])
+        y_train = pd.read_csv(self.y_train_path, index_col=[0])
+        print()
+        print('\n', X_train, '\n')
+        print('\n', y_train, '\n')
 
-        X_test = pd.read_csv(self.X_test_path, usecols=self.X_col)
-        y_test = pd.read_csv(self.y_test_path, usecols=self.y_col)
+        X_test = pd.read_csv(self.X_test_path, index_col=[0])
+        y_test = pd.read_csv(self.y_test_path, index_col=[0])
 
-        if self.param.get('scale'):
+        print('\n', X_test, '\n')
+        print('\n', y_test, '\n')
+
+        if self.param.get('scale') is True:
+
+            print('\n', 'SCALE', '\n')
             scaler = StandardScaler()
             X_train = scaler.fit_transform(X_train)
-            X_test = scaler.transform(X_test)
+
+            scaler = StandardScaler()
+            X_test = scaler.fit_transform(X_test)
 
         perceptron = Perceptron(random_state=241)
         perceptron.fit(X_train, y_train)
@@ -115,29 +123,28 @@ class SecondWeekLinearMethods(luigi.Task):
         predictions = perceptron.predict(X_test)
 
         accuracy = accuracy_score(y_test, predictions)
-
+        print('\n', accuracy, '\n')
         with self.output().open('w') as output:
-            output.write(accuracy)
+            output.write(str(accuracy))
 
     def requires(self):
         """
         Что требует
         """
         return GetData({'target':self.param.get('train'), 'result':self.X_train_path,\
-                'coluse':self.X_col}),\
+                'usecols':self.X_col}),\
             GetData({'target':self.param.get('train'), 'result':self.y_train_path,\
-                'coluse':self.y_col}),\
+                'usecols':self.y_col}),\
             GetData({'target':self.param.get('test'), 'result':self.X_test_path,\
-                'coluse':self.X_col}),\
-            GetData({'target':self.param.get('test'), 'result':self.X_test_path,\
-                'coluse':self.y_col})
+                'usecols':self.X_col}),\
+            GetData({'target':self.param.get('test'), 'result':self.y_test_path,\
+                'usecols':self.y_col})
 
 class GetData(luigi.Task):
     """
     Получение данных
     """
-    param = luigi.parameter.DictParameter(default={'target':path_to_data('./data.csv'),\
-            'result':path_to_data('gotten_data.csv'), 'coluse':[1]})
+    param = luigi.parameter.DictParameter()
 
     def output(self):
         """
@@ -149,11 +156,8 @@ class GetData(luigi.Task):
         """
         Берем данные
         """
-        if self.param.get('usecols'):
-            dframe = pd.read_csv(self.param.get('target'),\
-                usecols=self.param.get('usecols'))
-        else:
-            dframe = pd.read_csv(self.param.get('target'))
+        dframe = pd.read_csv(self.param.get('target'),\
+            usecols=self.param.get('usecols'), names=self.param.get('usecols'))
 
         dframe.to_csv(self.param.get('result'))
 
