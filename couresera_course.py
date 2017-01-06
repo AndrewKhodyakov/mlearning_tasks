@@ -19,26 +19,53 @@ from sklearn.metrics import accuracy_score
 path_to_data = lambda filename: os.environ.get('DATA_DIR', '.') + '/' + filename
 path_to_result = lambda filename: os.environ.get('RESULT_DIR', '.') + '/' + filename
 
-class TasksSet(luigi.WrapperTask):
+class SecondWeekLinearMethods(luigi.Task):
     """
-    Вся последовательность задач
+    Рассчитывает разность точностей между результатам работы одного и того же
+    адгоритма, на разных данных
     """
+    def output(self):
+        """
+        Созраняем результат
+        """
+        return luigi.LocalTarget(path_to_result(self.__class__.__name__ +\
+            '_result.txt'))
+
+    def run(self):
+        """
+        Вычисляем разницу
+        """
+        with self.input().get('no_scale').open('r') as no_scale:
+            no_scale_accuracy = no_scale.readline()
+
+        with self.input().get('scale').open('r') as scale:
+            scale_accuracy = scale.readline()
+
+        if float(no_scale_accuracy) <= float(scale_accuracy):
+            result = float(scale_accuracy) - float(no_scale_accuracy)
+        else:
+            result = float(no_scale_accuracy) - float(scale_accuracy)
+
+        print('\n', result,'\n')
+        with self.output().open('w') as output:
+            output.write('{0:.3f}'.format(result))
+
     def requires(self):
         """
         Тут задачи
         """
-        yield SecondWeekLinearMethods(\
+        return {'no_scale':PerceptronFitAndPredict(\
             param={'train':path_to_data('SecondWeekLinearMethods_train.csv'),\
                 'test':path_to_data('SecondWeekLinearMethods_test.csv'),\
-                'scale':False})
+                'scale':False}),\
 
-        yield SecondWeekLinearMethods(\
-            param={'train':path_to_data('SecondWeekLinearMethods_train.csv'),\
+            'scale':PerceptronFitAndPredict(\
+                param={'train':path_to_data('SecondWeekLinearMethods_train.csv'),\
                 'test':path_to_data('SecondWeekLinearMethods_test.csv'),\
-                'scale':True})
+                'scale':True})}
 
 
-class SecondWeekLinearMethods(luigi.Task):
+class PerceptronFitAndPredict(luigi.Task):
     """
     Задача решающая задание по линейным методам классификации
     """
@@ -55,67 +82,27 @@ class SecondWeekLinearMethods(luigi.Task):
         return luigi.LocalTarget(path_to_result(self.__class__.__name__ +\
             '_{0}_'.format(self.param.get('scale')) +'.txt'))
 
-    @property
-    def X_train_path(self):
-        """
-        СТроит путь к данным для обучения
-        """
-        out = 'SecondWeekLinearMethods_X_train' +\
-                '_{0}_'.format(self.param.get('scale')) + '.csv'
-        return path_to_data(out)
-
-    @property
-    def y_train_path(self):
-        """
-        СТроит путь к целевой переменной данным для обучения
-        """
-        out = 'SecondWeekLinearMethods_y_train' +\
-                '_{0}_'.format(self.param.get('scale')) + '.csv'
-        return path_to_data(out)
-
-
-    @property
-    def X_test_path(self):
-        """
-        СТроит путь к  данным для теста
-        """
-        out = 'SecondWeekLinearMethods_X_test' +\
-                '_{0}_'.format(self.param.get('scale')) + '.csv'
-        return path_to_data(out)
-
-    @property
-    def y_test_path(self):
-        """
-        СТроит путь к  данным для теста
-        """
-        out = 'SecondWeekLinearMethods_y_test' +\
-                '_{0}_'.format(self.param.get('scale')) + '.csv'
-        return path_to_data(out)
 
     def run(self):
         """
         Пуск задачи
         """
-        X_train = pd.read_csv(self.X_train_path, index_col=[0])
-        y_train = pd.read_csv(self.y_train_path, index_col=[0])
-        print()
-        print('\n', X_train, '\n')
-        print('\n', y_train, '\n')
+        train_data = pd.read_csv(self.param.get('train'))
+        test_data = pd.read_csv(self.param.get('test'))
+        X_train = train_data[['1', '2']]
+        y_train = train_data['0']
 
-        X_test = pd.read_csv(self.X_test_path, index_col=[0])
-        y_test = pd.read_csv(self.y_test_path, index_col=[0])
+        X_test = test_data[['1', '2']]
+        y_test = test_data['0']
 
-        print('\n', X_test, '\n')
-        print('\n', y_test, '\n')
 
         if self.param.get('scale') is True:
 
-            print('\n', 'SCALE', '\n')
             scaler = StandardScaler()
             X_train = scaler.fit_transform(X_train)
 
-            scaler = StandardScaler()
-            X_test = scaler.fit_transform(X_test)
+#            scaler = StandardScaler()
+            X_test = scaler.transform(X_test)
 
         perceptron = Perceptron(random_state=241)
         perceptron.fit(X_train, y_train)
@@ -123,43 +110,8 @@ class SecondWeekLinearMethods(luigi.Task):
         predictions = perceptron.predict(X_test)
 
         accuracy = accuracy_score(y_test, predictions)
-        print('\n', accuracy, '\n')
         with self.output().open('w') as output:
             output.write(str(accuracy))
-
-    def requires(self):
-        """
-        Что требует
-        """
-        return GetData({'target':self.param.get('train'), 'result':self.X_train_path,\
-                'usecols':self.X_col}),\
-            GetData({'target':self.param.get('train'), 'result':self.y_train_path,\
-                'usecols':self.y_col}),\
-            GetData({'target':self.param.get('test'), 'result':self.X_test_path,\
-                'usecols':self.X_col}),\
-            GetData({'target':self.param.get('test'), 'result':self.y_test_path,\
-                'usecols':self.y_col})
-
-class GetData(luigi.Task):
-    """
-    Получение данных
-    """
-    param = luigi.parameter.DictParameter()
-
-    def output(self):
-        """
-        Сохраняем данные
-        """
-        return luigi.LocalTarget(self.param.get('result'))
-
-    def run(self):
-        """
-        Берем данные
-        """
-        dframe = pd.read_csv(self.param.get('target'),\
-            usecols=self.param.get('usecols'), names=self.param.get('usecols'))
-
-        dframe.to_csv(self.param.get('result'))
 
 
 if __name__ == "__main__":

@@ -1,23 +1,34 @@
- cycler == 0.10.0
- decorator == 4.0.9
- ipython == 4.1.2
- ipython-genutils == 0.1.0
- matplotlib == 1.5.1
- numpy == 1.11.0
- pandas == 0.18.0
- path.py == 8.1.2
- pexpect == 4.0.1
- pickleshare == 0.6
- pip == 8.1.1
- ptyprocess == 0.5.1
- pyparsing == 2.1.1
- python-dateutil == 2.5.2
- pytz == 2016.3
- scikit-learn == 0.17.1
- scipy == 0.17.0
- setuptools == 20.6.7
- simplegeneric == 0.8.1
- six == 1.10.0
- sklearn == 0.0
- traitlets == 4.2.1
- wheel == 0.29.0
+astroid==1.4.9
+coverage==4.3.1
+cycler==0.10.0
+decorator==4.0.10
+docutils==0.13.1
+ipython==5.1.0
+ipython-genutils==0.1.0
+isort==4.2.5
+lazy-object-proxy==1.2.2
+lockfile==0.12.2
+luigi==2.4.0
+matplotlib==1.5.3
+mccabe==0.5.3
+numpy==1.11.3
+pandas==0.19.2
+pexpect==4.2.1
+pickleshare==0.7.4
+prompt-toolkit==1.0.9
+ptyprocess==0.5.1
+Pygments==2.1.3
+pylint==1.6.4
+pyparsing==2.1.10
+python-daemon==2.1.2
+python-dateutil==2.6.0
+pytz==2016.10
+scikit-learn==0.18.1
+scipy==0.18.1
+simplegeneric==0.8.1
+six==1.10.0
+sklearn==0.0
+tornado==4.4.2
+traitlets==4.3.1
+wcwidth==0.1.7
+wrapt==1.10.8
