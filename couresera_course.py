@@ -11,6 +11,7 @@ sys.path.append(os.getcwd())
 import luigi
 import pandas as pd
 
+from sklearn import datasets
 from sklearn.linear_model import Perceptron
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
@@ -101,7 +102,6 @@ class PerceptronFitAndPredict(luigi.Task):
             scaler = StandardScaler()
             X_train = scaler.fit_transform(X_train)
 
-#            scaler = StandardScaler()
             X_test = scaler.transform(X_test)
 
         perceptron = Perceptron(random_state=241)
@@ -114,5 +114,77 @@ class PerceptronFitAndPredict(luigi.Task):
             output.write(str(accuracy))
 
 
+class FirstPartThirdWeek_SVM(luigi.Task):
+    """
+    Задания третей недели - первая часть
+    """
+    def requires(self):
+        """
+        Какие задачи должны быть выполнены
+        """
+        
+        return GetAndTFIDFtransform(),
+        return FitCparam()
+        return StadyModel()
+        #TODO взять данные
+        #TODO вычислить TFIDF параметры
+        #TODO подобрать минимальный лучший парамтер из множества [10**-5,
+        #10**5], с ядром "linear" - мера качества accurensy
+    #TODO обучить выборку с парамтером С
+    #TODO найти 10 слов с наибольшим значением веса coef_y
+
+class SVModelFit(luigi.Task):
+    """
+    Сторим модель с данными
+    C_param : параметр для обучения SVM
+    task_mode : режим выполенения задачи влияет на результат который пишется в файл
+    """
+    C_param = luigi.Parameter()
+    task_mode = luigi.Parameter(defult='research')
+
+    def requires(self):
+        """
+        Что требуется для вычисления задачи
+        """
+        return GetData()
+
+    def output(self):
+        """
+        Резуьтат
+        """
+        return luigi.LocalTarget(self.target_path)
+
+    def run(self):
+        """
+        Обучаем модель под данным с параметром
+        """
+        X_data = pd.read_csv(self.input().get('X_data').path)
+        y_data = pd.read_csv(self.input().get('y_data').path)
+
+
+        if task_mode == 'research':
+            pass
+        else:
+            pass
+
+
+class GetDoTFIDFTransofr(luigi.Task):
+    """
+    Получаем данные и делае TF IDF трансформацию
+    """
+    def output(self):
+        """
+        Резуьтат
+        """
+        return luigi.LocalTarget(path_to_data(self.__class__.__name__))
+
+    def run(self):
+        """
+        Берем данные из newsgroup, делаем трансоврмацию
+        """
+        newsgroup = datasets.fetch_20newsgropus(subset='all',
+            categories=['alt.atheism','sci.space'])
+
 if __name__ == "__main__":
-    luigi.run(main_task_cls=TasksSet)
+    pass
+#    luigi.run(main_task_cls=TasksSet)

@@ -12,14 +12,21 @@ if __name__ == "__main__":
 
     S = svm.SVC(C=100000, random_state=241, kernel='linear')
     svm_model = S.fit(data[['A', 'B']], data['target'])
-    f = open('./svm_result.txt', 'wt')
-    res = ''
-    tmp = svm_model.support_
-    tmp.sort()
-    for i in tmp:
-        res = res + str(i+1) + ','
-    f.write(res)
-    f.close()
+#    f = open('./svm_result.txt', 'wt')
+#    res = ''
+#    tmp = svm_model.support_
+#    tmp.sort()
+#    for i in tmp:
+#        res = res + str(i+1) + ','
+#    res = res.strip('\n')
+#    f.write(res)
+#    f.close()
+    with open('./svm_result.txt', 'w') as res_f:
+        res = ''
+        for i in svm_model.support_:
+            res = res + str(i+1) + ','
+        res = res.strip(',')
+        res_f.write(res)
 
     plt = seaborn.regplot(data['A'], data['B'])
     plt.figure.savefig('./svm.png')
