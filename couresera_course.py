@@ -5,6 +5,7 @@
 """
 import os
 import sys
+import shelve
 
 sys.path.append(os.getcwd())
 
@@ -12,8 +13,10 @@ import luigi
 import pandas as pd
 
 from sklearn import datasets
+from sklearn.cross_validation import KFold
 from sklearn.linear_model import Perceptron
 from sklearn.preprocessing import StandardScaler
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import accuracy_score
 
 
@@ -148,6 +151,14 @@ class SVModelFit(luigi.Task):
         """
         return GetData()
 
+    @property
+    def X_data(self):
+        """
+        Получаем данные для обучения из БД
+        """
+        db = shelve.open(self.input().path)
+        return db['X_data']
+
     def output(self):
         """
         Резуьтат
@@ -161,9 +172,8 @@ class SVModelFit(luigi.Task):
         X_data = pd.read_csv(self.input().get('X_data').path)
         y_data = pd.read_csv(self.input().get('y_data').path)
 
-
         if task_mode == 'research':
-            pass
+            kfold = KFold(self.X_data, n_folds=5, shuffle=True, random_state=42)
         else:
             pass
 
@@ -176,14 +186,24 @@ class GetDoTFIDFTransofr(luigi.Task):
         """
         Резуьтат
         """
-        return luigi.LocalTarget(path_to_data(self.__class__.__name__))
+        return luigi.LocalTarget(path_to_data(self.__class__.__name__) + '.dat')
 
     def run(self):
         """
         Берем данные из newsgroup, делаем трансоврмацию
         """
+        data_base = shelve.open(path_to_data(self.__class__.__name__))
+
         newsgroup = datasets.fetch_20newsgropus(subset='all',
             categories=['alt.atheism','sci.space'])
+
+        tfidf = TfidfVectorizer()
+        X_data = tfidf.fit_transform(newsgroup.data)
+
+        data_base['tfidf'] = tfidf
+        data_base['X_data'] = X_data
+        data_base.close()
+        
 
 if __name__ == "__main__":
     pass
