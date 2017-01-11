@@ -12,7 +12,7 @@ sys.path.append(os.getcwd())
 import luigi
 import pandas as pd
 
-from sklearn import datasets
+from sklearn.datasets import fetch_20newsgroups
 from sklearn.cross_validation import KFold
 from sklearn.linear_model import Perceptron
 from sklearn.preprocessing import StandardScaler
@@ -143,7 +143,7 @@ class SVModelFit(luigi.Task):
     task_mode : режим выполенения задачи влияет на результат который пишется в файл
     """
     C_param = luigi.Parameter()
-    task_mode = luigi.Parameter(defult='research')
+    task_mode = luigi.Parameter(default='research')
 
     def requires(self):
         """
@@ -194,7 +194,7 @@ class GetDoTFIDFTransofr(luigi.Task):
         """
         data_base = shelve.open(path_to_data(self.__class__.__name__))
 
-        newsgroup = datasets.fetch_20newsgropus(subset='all',
+        newsgroup = fetch_20newsgroups(subset='all',
             categories=['alt.atheism','sci.space'])
 
         tfidf = TfidfVectorizer()
