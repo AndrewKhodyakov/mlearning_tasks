@@ -10,12 +10,15 @@ import shelve
 sys.path.append(os.getcwd())
 
 import luigi
+import numpy as np
 import pandas as pd
 
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.cross_validation import KFold
 from sklearn.linear_model import Perceptron
+from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
+from sklearn.grid_search import GridSearchCV
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import accuracy_score
 
@@ -142,22 +145,30 @@ class SVModelFit(luigi.Task):
     C_param : параметр для обучения SVM
     task_mode : режим выполенения задачи влияет на результат который пишется в файл
     """
-    C_param = luigi.Parameter()
+    C_param = luigi.Parameter(default=None)
     task_mode = luigi.Parameter(default='research')
 
     def requires(self):
         """
         Что требуется для вычисления задачи
         """
-        return GetData()
+        return GetDoTFIDFTransofr()
 
     @property
     def X_data(self):
         """
         Получаем данные для обучения из БД
         """
-        db = shelve.open(self.input().path)
+        db = shelve.open(self.input().path.split('.dat')[0])
         return db['X_data']
+
+    @property
+    def y_data(self):
+        """
+        Получаем данные для обучения из БД
+        """
+        db = shelve.open(self.input().path.split('.dat')[0])
+        return db['y_data']
 
     def output(self):
         """
@@ -169,11 +180,16 @@ class SVModelFit(luigi.Task):
         """
         Обучаем модель под данным с параметром
         """
-        X_data = pd.read_csv(self.input().get('X_data').path)
-        y_data = pd.read_csv(self.input().get('y_data').path)
+        X_data = self.X_data
+        y_data = self.y_data
 
-        if task_mode == 'research':
-            kfold = KFold(self.X_data, n_folds=5, shuffle=True, random_state=42)
+        if self.task_mode == 'research':
+            grid = {'C': np.power(10.0, np.arange(-5,5))}
+            kfold = KFold(y_data.size, n_folds=5, shuffle=True, random_state=241)
+            svc = SVC(kernel='linear', random_state=241)
+            gs = GridSearchCV(svc, grid, scoring='accuracy', cv=kfold)
+            gs.fit(X_data, y_data)
+            print(gs.grid_scores_)
         else:
             pass
 
@@ -202,6 +218,7 @@ class GetDoTFIDFTransofr(luigi.Task):
 
         data_base['tfidf'] = tfidf
         data_base['X_data'] = X_data
+        data_base['y_data'] = newsgroup.target
         data_base.close()
         
 
