@@ -189,7 +189,7 @@ class SVModelFit(luigi.Task):
             svc = SVC(kernel='linear', random_state=241)
             gs = GridSearchCV(svc, grid, scoring='accuracy', cv=kfold)
             gs.fit(X_data, y_data)
-            print(gs.grid_scores_)
+
         else:
             pass
 
