@@ -132,10 +132,6 @@ class FirstPartThirdWeek_SVM(luigi.Task):
         return GetAndTFIDFtransform(),
         return FitCparam()
         return StadyModel()
-        #TODO взять данные
-        #TODO вычислить TFIDF параметры
-        #TODO подобрать минимальный лучший парамтер из множества [10**-5,
-        #10**5], с ядром "linear" - мера качества accurensy
     #TODO обучить выборку с парамтером С
     #TODO найти 10 слов с наибольшим значением веса coef_y
 
@@ -174,7 +170,7 @@ class SVModelFit(luigi.Task):
         """
         Резуьтат
         """
-        return luigi.LocalTarget(self.target_path)
+        return luigi.LocalTarget(self.__class__.__name__ + self.task_mode +'.csv')
 
     def run(self):
         """
@@ -189,6 +185,10 @@ class SVModelFit(luigi.Task):
             svc = SVC(kernel='linear', random_state=241)
             gs = GridSearchCV(svc, grid, scoring='accuracy', cv=kfold)
             gs.fit(X_data, y_data)
+            for score in gs.grid_scores_:
+                print(score)
+
+            print(type(gs.grid_scores_), gs.grid_scores_)
 
         else:
             pass
