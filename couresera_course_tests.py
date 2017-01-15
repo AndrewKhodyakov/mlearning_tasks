@@ -3,6 +3,7 @@ import sys
 sys.path.append(os.getcwd())
 
 from couresera_course import GetDoTFIDFTransofr
+from couresera_course import FitCparam
 from couresera_course import SVModelFit
 import unittest
 
@@ -15,7 +16,8 @@ class FirstPartThirdWeek_SVMTests(unittest.TestCase):
         setup first_part thrid week
         """
         self.tfidf_task = GetDoTFIDFTransofr()
-        self.svm_fit_task = SVModelFit(C_param=1.0, task_mode='research')
+        self.fit_C = FitCparam()
+        self.svm_fit_task = SVModelFit()
 
     def test_a_tfidf_run(self):
         """
@@ -30,6 +32,14 @@ class FirstPartThirdWeek_SVMTests(unittest.TestCase):
         test tfidf_run method
         """
         print(2)
+        self.fit_C.run()
+        self.assertTrue(self.fit_C.output().exists())
+
+    def test_c_tfidf_run(self):
+        """
+        test tfidf_run method
+        """
+        print(3)
         self.svm_fit_task.run()
         self.assertTrue(self.svm_fit_task.output().exists())
 

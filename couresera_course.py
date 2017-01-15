@@ -129,21 +129,74 @@ class FirstPartThirdWeek_SVM(luigi.Task):
         Какие задачи должны быть выполнены
         """
         
-        return GetAndTFIDFtransform(),
-        return FitCparam()
-        return StadyModel()
-    #TODO обучить выборку с парамтером С
-    #TODO найти 10 слов с наибольшим значением веса coef_y
+        return GetAndTFIDFtransfor(),
+        return FitCparam(),
+        return SVModelFit()
 
 class SVModelFit(luigi.Task):
+    """ 
+    Обучаем svm  модель, и сохраняем 10 слов с наибольшим абсолютным зна
+    чением веса
+    """
+    def requires(self):
+        """
+        Что требуется для вычисления задачи
+        """
+        return FitCparam()
+
+    def output(self):
+        """
+        Резуьтат
+        """
+        return luigi.LocalTarget(self.__class__.__name__+'.txt')
+
+    @property
+    def X_data(self):
+        """
+        Получаем данные для обучения из БД
+        """
+        db = shelve.open(self.input().path.split('.dat')[0])
+        out = db['X_data']
+        db.close()
+        return out
+
+    @property
+    def y_data(self):
+        """
+        Получаем данные для обучения из БД
+        """
+        db = shelve.open(self.input().path.split('.dat')[0])
+        out = db['y_data']
+        db.close()
+        return out
+
+    @property
+    def C_param(self):
+        """
+        параметр для модели
+        """
+        db = shelve.open(self.input().path.split('.dat')[0])
+        out = db['gs'].best_params_.get('C')
+        db.close()
+        return out
+
+    def run(self):
+        """
+        Обучаем модель под данным с параметром
+        """
+        svc = SVC(C=self.C_param, kernel='linear', random_state=241)
+
+        svc.fit(self.X_data, self.y_data)
+
+        with self.output().open('w') as result:
+            result.write(svc.coef_у)
+
+class FitCparam(luigi.Task):
     """
     Сторим модель с данными
     C_param : параметр для обучения SVM
     task_mode : режим выполенения задачи влияет на результат который пишется в файл
     """
-    C_param = luigi.Parameter(default=None)
-    task_mode = luigi.Parameter(default='research')
-
     def requires(self):
         """
         Что требуется для вычисления задачи
@@ -156,7 +209,9 @@ class SVModelFit(luigi.Task):
         Получаем данные для обучения из БД
         """
         db = shelve.open(self.input().path.split('.dat')[0])
-        return db['X_data']
+        out = db['X_data']
+        db.close()
+        return out
 
     @property
     def y_data(self):
@@ -164,37 +219,32 @@ class SVModelFit(luigi.Task):
         Получаем данные для обучения из БД
         """
         db = shelve.open(self.input().path.split('.dat')[0])
-        return db['y_data']
+        out = db['y_data']
+        db.close()
+        return out
 
     def output(self):
         """
         Резуьтат
         """
-        return luigi.LocalTarget(self.__class__.__name__ + self.task_mode +'.dat')
+        return luigi.LocalTarget(self.__class__.__name__+'.dat')
 
     def run(self):
         """
         Обучаем модель под данным с параметром
         """
-        data_base = shelve.open(self.__class__.__name__ + self.task_mode)
+        data_base = shelve.open(self.__class__.__name__)
         X_data = self.X_data
         y_data = self.y_data
 
-        if self.task_mode == 'research':
-            grid = {'C': np.power(10.0, np.arange(-5,5))}
-            kfold = KFold(y_data.size, n_folds=5, shuffle=True, random_state=241)
-            svc = SVC(kernel='linear', random_state=241)
-            gs = GridSearchCV(svc, grid, scoring='accuracy', cv=kfold)
-            gs.fit(X_data, y_data)
-            for score in gs.grid_scores_:
-                print(score)
-
-            data_base['gs'] = gs
-            print(type(gs.grid_scores_), gs.grid_scores_)
-
-        else:
-            pass
-
+        grid = {'C': np.power(10.0, np.arange(-5,5))}
+        kfold = KFold(y_data.size, n_folds=5, shuffle=True, random_state=241)
+        svc = SVC(kernel='linear', random_state=241)
+        gs = GridSearchCV(svc, grid, scoring='accuracy', cv=kfold)
+        gs.fit(X_data, y_data)
+        data_base['gs'] = gs
+        data_base['X_data'] = X_data
+        data_base['y_data'] = y_data
         data_base.close()
 
 
