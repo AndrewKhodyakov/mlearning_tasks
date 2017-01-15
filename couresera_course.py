@@ -170,12 +170,13 @@ class SVModelFit(luigi.Task):
         """
         Резуьтат
         """
-        return luigi.LocalTarget(self.__class__.__name__ + self.task_mode +'.csv')
+        return luigi.LocalTarget(self.__class__.__name__ + self.task_mode +'.dat')
 
     def run(self):
         """
         Обучаем модель под данным с параметром
         """
+        data_base = shelve.open(self.__class__.__name__ + self.task_mode)
         X_data = self.X_data
         y_data = self.y_data
 
@@ -188,10 +189,13 @@ class SVModelFit(luigi.Task):
             for score in gs.grid_scores_:
                 print(score)
 
+            data_base['gs'] = gs
             print(type(gs.grid_scores_), gs.grid_scores_)
 
         else:
             pass
+
+        data_base.close()
 
 
 class GetDoTFIDFTransofr(luigi.Task):
