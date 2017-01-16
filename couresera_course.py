@@ -131,7 +131,45 @@ class FirstPartThirdWeek_SVM(luigi.Task):
         
         return GetAndTFIDFtransfor(),
         return FitCparam(),
-        return SVModelFit()
+        return SVModelFit(),
+        return ExtractWords()
+
+
+class ExtractWords(luigi.Task):
+    """ 
+    Обучаем svm  модель, и сохраняем 10 слов с наибольшим абсолютным зна
+    чением веса
+    """
+    def requires(self):
+        """
+        Что требуется для вычисления задачи
+        """
+        return {'model':SVModelFit(), 'data':GetDoTFIDFTransofr()}
+
+    def output(self):
+        """
+        Резуьтат
+        """
+        return luigi.LocalTarget(self.__class__.__name__+'.txt')
+
+    def run(self):
+        """
+        Ищем индексы в результатах
+        """
+        with shelve.open(self.input().get('model').path.split('.dat')[0]) as db:
+            coef = db.get('svc').coef_
+
+        with shelve.open(self.input().get('data').path.split('.dat')[0]) as db:
+            words = db.get('tfidf').get_feature_names())
+
+        indexes = np.argsort(coef).getA()[0][-10:]
+        result = [words[i] for i in indexes]
+        with self.output().open('w') as out:
+            for word in result:
+                if word != result(len(result)-1)
+                    out.write(word + ',')
+                else:
+                    out.write(word)
 
 class SVModelFit(luigi.Task):
     """ 
@@ -148,7 +186,7 @@ class SVModelFit(luigi.Task):
         """
         Резуьтат
         """
-        return luigi.LocalTarget(self.__class__.__name__+'.txt')
+        return luigi.LocalTarget(self.__class__.__name__+'.dat')
 
     @property
     def X_data(self):
@@ -184,12 +222,13 @@ class SVModelFit(luigi.Task):
         """
         Обучаем модель под данным с параметром
         """
+        data_base = shelve.open(self.__class__.__name__)
         svc = SVC(C=self.C_param, kernel='linear', random_state=241)
 
         svc.fit(self.X_data, self.y_data)
 
-        with self.output().open('w') as result:
-            result.write(svc.coef_у)
+        data_base['svc'] = svc
+        data_base.close()
 
 class FitCparam(luigi.Task):
     """
