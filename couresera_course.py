@@ -120,7 +120,7 @@ class PerceptronFitAndPredict(luigi.Task):
             output.write(str(accuracy))
 
 
-class FirstPartThirdWeek_SVM(luigi.Task):
+class FirstPartThirdWeek_SVM(luigi.WrapperTask):
     """
     Задания третей недели - первая часть
     """
@@ -128,11 +128,10 @@ class FirstPartThirdWeek_SVM(luigi.Task):
         """
         Какие задачи должны быть выполнены
         """
-        
-        return GetAndTFIDFtransfor(),
-        return FitCparam(),
-        return SVModelFit(),
-        return ExtractWords()
+        yield GetDoTFIDFTransofr(),
+        yield FitCparam(),
+        yield SVModelFit(),
+        yield ExtractWords()
 
 
 class ExtractWords(luigi.Task):
@@ -150,7 +149,7 @@ class ExtractWords(luigi.Task):
         """
         Резуьтат
         """
-        return luigi.LocalTarget(self.__class__.__name__+'.txt')
+        return luigi.LocalTarget(path_to_result(self.__class__.__name__+'.txt'))
 
     def run(self):
         """
@@ -160,13 +159,13 @@ class ExtractWords(luigi.Task):
             coef = db.get('svc').coef_
 
         with shelve.open(self.input().get('data').path.split('.dat')[0]) as db:
-            words = db.get('tfidf').get_feature_names())
+            words = db.get('tfidf').get_feature_names()
 
         indexes = np.argsort(coef).getA()[0][-10:]
         result = [words[i] for i in indexes]
         with self.output().open('w') as out:
             for word in result:
-                if word != result(len(result)-1)
+                if word != result(len(result)-1):
                     out.write(word + ',')
                 else:
                     out.write(word)
@@ -186,7 +185,7 @@ class SVModelFit(luigi.Task):
         """
         Резуьтат
         """
-        return luigi.LocalTarget(self.__class__.__name__+'.dat')
+        return luigi.LocalTarget(path_to_data(self.__class__.__name__+'.dat'))
 
     @property
     def X_data(self):
@@ -222,7 +221,7 @@ class SVModelFit(luigi.Task):
         """
         Обучаем модель под данным с параметром
         """
-        data_base = shelve.open(self.__class__.__name__)
+        data_base = shelve.open(self.output().path.split('.dat')[0])
         svc = SVC(C=self.C_param, kernel='linear', random_state=241)
 
         svc.fit(self.X_data, self.y_data)
@@ -266,13 +265,13 @@ class FitCparam(luigi.Task):
         """
         Резуьтат
         """
-        return luigi.LocalTarget(self.__class__.__name__+'.dat')
+        return luigi.LocalTarget(path_to_data(self.__class__.__name__+'.dat'))
 
     def run(self):
         """
         Обучаем модель под данным с параметром
         """
-        data_base = shelve.open(self.__class__.__name__)
+        data_base = shelve.open(self.output().path.split('.dat')[0])
         X_data = self.X_data
         y_data = self.y_data
 
@@ -301,7 +300,7 @@ class GetDoTFIDFTransofr(luigi.Task):
         """
         Берем данные из newsgroup, делаем трансоврмацию
         """
-        data_base = shelve.open(path_to_data(self.__class__.__name__))
+        data_base = shelve.open(self.output().path.split('.dat')[0])
 
         newsgroup = fetch_20newsgroups(subset='all',
             categories=['alt.atheism','sci.space'])
