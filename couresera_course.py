@@ -161,6 +161,7 @@ class ExtractWords(luigi.Task):
         with shelve.open(self.input().get('data').path.split('.dat')[0]) as db:
             words = db.get('tfidf').get_feature_names()
 
+        #TODO переписать здесь сделать через np.abs -> np.argsort?
         indexes = np.argsort(coef).getA()[0][-10:]
         result = [words[i] for i in indexes]
         with self.output().open('w') as out:
