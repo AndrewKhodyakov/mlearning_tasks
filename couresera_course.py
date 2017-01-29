@@ -156,17 +156,17 @@ class ExtractWords(luigi.Task):
         Ищем индексы в результатах
         """
         with shelve.open(self.input().get('model').path.split('.dat')[0]) as db:
-            coef = db.get('svc').coef_
+            coef = np.absolute(db.get('svc').coef_).toarray()
 
         with shelve.open(self.input().get('data').path.split('.dat')[0]) as db:
             words = db.get('tfidf').get_feature_names()
 
-        #TODO переписать здесь сделать через np.abs -> np.argsort?
-        indexes = np.argsort(coef).getA()[0][-10:]
-        result = [words[i] for i in indexes]
+        indexes = np.argsort(coef)[0][-10:]
+        result = np.array(words)[indexes]
+        result.sort()
         with self.output().open('w') as out:
             for word in result:
-                if word != result(len(result)-1):
+                if word != result[-1:]:
                     out.write(word + ',')
                 else:
                     out.write(word)
